@@ -78,7 +78,7 @@ final class RunnerTest extends TestCase
             true,
             new NullCacheManager(),
             new Directory($path),
-            false
+            false,
         );
 
         $changed = $runner->fix();
@@ -98,7 +98,7 @@ final class RunnerTest extends TestCase
             true,
             new NullCacheManager(),
             new Directory($path),
-            true
+            true,
         );
 
         $changed = $runner->fix();
@@ -128,7 +128,7 @@ final class RunnerTest extends TestCase
             $errorsManager,
             new Linter(),
             true,
-            new NullCacheManager()
+            new NullCacheManager(),
         );
         $changed = $runner->fix();
         $pathToInvalidFile = $path.\DIRECTORY_SEPARATOR.'somefile.php';
@@ -170,7 +170,7 @@ final class RunnerTest extends TestCase
             null,
             false,
             new ParallelConfig(2, 1, 50),
-            new ArrayInput(['--config' => ConfigurationResolver::IGNORE_CONFIG_FILE], (new FixCommand(new ToolInfo()))->getDefinition())
+            new ArrayInput(['--config' => ConfigurationResolver::IGNORE_CONFIG_FILE], (new FixCommand(new ToolInfo()))->getDefinition()),
         );
         $changed = $runner->fix();
         $pathToInvalidFile = $path.\DIRECTORY_SEPARATOR.'somefile.php';
@@ -218,7 +218,7 @@ final class RunnerTest extends TestCase
             null,
             false,
             $parallelConfig,
-            new ArrayInput(['--config' => ConfigurationResolver::IGNORE_CONFIG_FILE], (new FixCommand(new ToolInfo()))->getDefinition())
+            new ArrayInput(['--config' => ConfigurationResolver::IGNORE_CONFIG_FILE], (new FixCommand(new ToolInfo()))->getDefinition()),
         );
 
         $eventDispatcher->addListener(AnalysisStarted::NAME, static function (AnalysisStarted $event) use ($expectedMode): void {
@@ -285,7 +285,7 @@ final class RunnerTest extends TestCase
             null,
             $stopOnViolation,
             new ParallelConfig(2, 1, 3),
-            new ArrayInput(['--config' => ConfigurationResolver::IGNORE_CONFIG_FILE], (new FixCommand(new ToolInfo()))->getDefinition())
+            new ArrayInput(['--config' => ConfigurationResolver::IGNORE_CONFIG_FILE], (new FixCommand(new ToolInfo()))->getDefinition()),
         );
 
         self::assertCount($expectedChanges, $runner->fix());
@@ -323,7 +323,7 @@ final class RunnerTest extends TestCase
             true,
             new NullCacheManager(),
             new Directory($path),
-            true
+            true,
         );
 
         $runner->fix();
@@ -333,8 +333,45 @@ final class RunnerTest extends TestCase
             \Closure::bind(
                 static fn ($differ): string => $differ->passedFile->getPath(),
                 null,
-                \get_class($differ)
+                \get_class($differ),
             )($differ),
+        );
+    }
+
+    public function testRuleIgnoredByTag(): void
+    {
+        $fixers = [
+            new Fixer\Basic\NumericLiteralSeparatorFixer(),
+            new Fixer\FunctionNotation\NativeFunctionInvocationFixer(),
+        ];
+
+        $path = \dirname(__DIR__).\DIRECTORY_SEPARATOR.'Fixtures'.\DIRECTORY_SEPARATOR.'FixerTest'.\DIRECTORY_SEPARATOR.'rule-ignored-by-tag';
+
+        $runner = new Runner(
+            Finder::create()->in($path),
+            $fixers,
+            new NullDiffer(),
+            null,
+            new ErrorsManager(),
+            new Linter(),
+            true,
+            new NullCacheManager(),
+            new Directory($path),
+            false,
+        );
+
+        $changed = $runner->fix();
+
+        self::assertCount(2, $changed);
+        self::assertArrayHasKey('A-without-ignore-tag.php', $changed);
+        self::assertSame(
+            ['numeric_literal_separator', 'native_function_invocation'],
+            $changed['A-without-ignore-tag.php']['appliedFixers'],
+        );
+        self::assertArrayHasKey('B-with-ignore-tag.php', $changed);
+        self::assertSame(
+            ['native_function_invocation'],
+            $changed['B-with-ignore-tag.php']['appliedFixers'],
         );
     }
 
@@ -381,13 +418,13 @@ final class RunnerTest extends TestCase
                 'filePath' => $error->getFilePath(),
                 'sourceMessage' => null === $error->getSource() ? null : $error->getSource()->getMessage(),
             ],
-            $errorsManager->getAllErrors()
+            $errorsManager->getAllErrors(),
         );
 
         self::assertEqualsCanonicalizing(
             $expectedErrors ?? [],
             $actualErrors,
-            'Errors do not match expected.'
+            'Errors do not match expected.',
         );
     }
 
@@ -608,7 +645,7 @@ final class RunnerTest extends TestCase
             // $configFile
             null,
             // $ruleCustomisationPolicy
-            $policy
+            $policy,
         );
         $fixInfo = $runner->fix();
         $fixedFiles = array_keys($fixInfo);
