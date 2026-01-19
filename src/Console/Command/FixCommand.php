@@ -176,10 +176,20 @@ use Symfony\Component\Stopwatch\Stopwatch;
             By using <comment>--using-cache</comment> option with `yes` or `no` you can set if the caching
             mechanism should be used.
 
-            The command can also read from standard input, in which case it won't
-            automatically fix anything:
+            Reading from STDIN
+            ------------------
 
+            The command can read from standard input by passing <comment>-</comment> as the path argument.
+            This is useful for editor integration, testing code snippets, or CI/CD pipelines.
+
+            <fg=yellow>Important:</>  STDIN mode automatically runs in dry-run (read-only) mode since the tool
+            cannot write back to standard input. Use <comment>--diff</comment> to see what changes would be applied.
+
+            Examples:
+
+                <info>$ php %command.full_name% --diff - < file.php</info>
                 <info>$ cat foo.php | php %command.full_name% --diff -</info>
+                <info>$ echo '<?php echo "test" ;' | php %command.full_name% --rules=@PSR12 --diff -</info>
 
             Finally, if you don't need BC kept on CLI level, you might use `PHP_CS_FIXER_FUTURE_MODE` to start using options that
             would be default in next MAJOR release and to forbid using deprecated configuration:

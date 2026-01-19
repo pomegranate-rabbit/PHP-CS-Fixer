@@ -125,12 +125,34 @@ If the option is not provided, it defaults to ``bar`` unless a config file that 
 
     php php-cs-fixer.phar fix --verbose --show-progress=dots
 
-The command can also read from standard input, in which case it won't
-automatically fix anything:
+Reading from STDIN
+^^^^^^^^^^^^^^^^^^
+
+The command can also read from standard input by passing ``-`` as the path argument. This is useful for integrating with editors, IDEs, or other tools that can pipe PHP code.
+
+**Important**: When using STDIN mode, the tool automatically runs in **dry-run mode** (read-only) since it cannot write back to STDIN. The fixed code is not automatically applied anywhere - you'll need to redirect the output if you want to capture it.
+
+Basic usage:
+
+.. code-block:: console
+
+    php php-cs-fixer.phar fix --diff - < file.php
+
+How it works:
+
+* The ``-`` argument tells the tool to read from standard input instead of a file path
+* Content is read once from ``php://stdin`` and cached internally (since STDIN is not seekable)
+* The file is treated as ``stdin.php`` with extension ``.php`` so all fixers work normally
+* Dry-run mode is automatically enabled - no files are modified
+* Use ``--diff`` to see what changes would be applied
+* The output shows ``php://stdin`` as the filename in diffs
+
+Example with rules:
 
 .. code-block:: console
 
     cat foo.php | php php-cs-fixer.phar fix --diff -
+    php php-cs-fixer.phar fix --rules=@PSR12 --diff - < foo.php
 
 Finally, if you don't need BC kept on CLI level, you might use ``PHP_CS_FIXER_FUTURE_MODE`` to start using options that
 would be default in next MAJOR release and to forbid using deprecated configuration:
