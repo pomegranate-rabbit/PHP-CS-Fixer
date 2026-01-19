@@ -695,6 +695,16 @@ final class ConfigurationResolver
                     $this->format = 'gitlab';
                 }
             }
+
+            // Auto-select stdout format for stdin input when in future mode
+            if (Future::isFutureModeEnabled() && $this->isStdIn() && null === $this->options['format']) {
+                $this->format = 'stdout';
+            }
+
+            // Validate that stdout format is only used with stdin
+            if ('stdout' === $this->format && !$this->isStdIn()) {
+                throw new InvalidConfigurationException('The "stdout" format is only available when reading from standard input (use "-" as path argument).');
+            }
         }
 
         return $this->format;

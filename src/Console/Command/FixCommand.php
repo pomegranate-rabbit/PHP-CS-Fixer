@@ -113,11 +113,12 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
                 <info>$ php %command.full_name% --path-mode=intersection /path/to/dir</info>
 
-            The <comment>--format</comment> option for the output format. Supported formats are `@auto` (default one on v4+), `txt` (default one on v3), `json`, `xml`, `checkstyle`, `junit` and `gitlab`.
+            The <comment>--format</comment> option for the output format. Supported formats are `@auto` (default one on v4+), `txt` (default one on v3), `json`, `xml`, `checkstyle`, `junit`, `gitlab` and `stdout`.
 
             * `@auto` aims to auto-select best reporter for given CI or local execution (resolution into best format is outside of BC promise and is future-ready)
               * `gitlab` for GitLab
             * `@auto,{format}` takes `@auto` under CI, and {format} otherwise
+            * `stdout` outputs the fixed file content directly to stdout (only available with stdin input, automatically selected with `PHP_CS_FIXER_FUTURE_MODE=1`)
 
             NOTE: the output for the following formats are generated in accordance with schemas
 
@@ -183,13 +184,15 @@ use Symfony\Component\Stopwatch\Stopwatch;
             This is useful for editor integration, testing code snippets, or CI/CD pipelines.
 
             <fg=yellow>Important:</>  STDIN mode automatically runs in dry-run (read-only) mode since the tool
-            cannot write back to standard input. Use <comment>--diff</comment> to see what changes would be applied.
+            cannot write back to standard input. Use <comment>--diff</comment> to see what changes would be applied,
+            or <comment>--format=stdout</comment> to output the fixed file content directly to stdout.
 
             Examples:
 
                 <info>$ php %command.full_name% --diff - < file.php</info>
                 <info>$ cat foo.php | php %command.full_name% --diff -</info>
                 <info>$ echo '<?php echo "test" ;' | php %command.full_name% --rules=@PSR12 --diff -</info>
+                <info>$ cat foo.php | php %command.full_name% --format=stdout - > fixed.php</info>
 
             Finally, if you don't need BC kept on CLI level, you might use `PHP_CS_FIXER_FUTURE_MODE` to start using options that
             would be default in next MAJOR release and to forbid using deprecated configuration:
@@ -283,9 +286,14 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
         $reporter = $resolver->getReporter();
 
+        // Suppress stderr output for stdout format to keep output clean
         $stdErr = $output instanceof ConsoleOutputInterface
             ? $output->getErrorOutput()
             : ('txt' === $reporter->getFormat() ? $output : null);
+
+        if ('stdout' === $reporter->getFormat()) {
+            $stdErr = null;
+        }
 
         if (null !== $stdErr) {
             $stdErr->writeln(Application::getAboutWithRuntime(true));

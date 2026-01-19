@@ -55,7 +55,7 @@ use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
- * @phpstan-type _RunResult array<string, array{appliedFixers: list<string>, diff: string}>
+ * @phpstan-type _RunResult array<string, array{appliedFixers: list<string>, diff: string, fixedContent: string}>
  *
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
  * @author Greg Korba <greg@codito.dev>
@@ -495,7 +495,7 @@ final class Runner
     }
 
     /**
-     * @return null|array{appliedFixers: list<string>, diff: string}
+     * @return null|array{appliedFixers: list<string>, diff: string, fixedContent: string}
      */
     private function fixFile(\SplFileInfo $file, LintingResultInterface $lintingResult): ?array
     {
@@ -632,6 +632,7 @@ final class Runner
             $fixInfo = [
                 'appliedFixers' => $appliedFixers,
                 'diff' => $this->differ->diff($old, $new, $file),
+                'fixedContent' => $new,
             ];
 
             try {

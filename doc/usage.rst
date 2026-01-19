@@ -58,13 +58,14 @@ which will use the intersection of the paths from the config file and from the a
 
     php php-cs-fixer.phar fix --path-mode=intersection /path/to/dir
 
-The ``--format`` option for the output format. Supported formats are ``@auto`` (default one on v4+), ``txt`` (default one on v3), ``checkstyle``, ``gitlab``, ``json``, ``junit`` and ``xml``.
+The ``--format`` option for the output format. Supported formats are ``@auto`` (default one on v4+), ``txt`` (default one on v3), ``checkstyle``, ``gitlab``, ``json``, ``junit``, ``stdout`` and ``xml``.
 
 * ``@auto`` aims to auto-select best reporter for given CI or local execution (resolution into best format is outside of BC promise and is future-ready)
 
   * ``gitlab`` for GitLab
 
 * ``@auto,{format}`` takes ``@auto`` under CI, and {format} otherwise
+* ``stdout`` outputs the fixed file content directly to stdout (only available with stdin input; automatically selected when ``PHP_CS_FIXER_FUTURE_MODE=1`` is set with stdin)
 
 NOTE: the output for the following formats are generated in accordance with schemas
 
@@ -128,10 +129,9 @@ If the option is not provided, it defaults to ``bar`` unless a config file that 
 Reading from STDIN
 ^^^^^^^^^^^^^^^^^^
 
-The command can also read from standard input by passing ``-`` as the path argument. This is useful for integrating with editors, IDEs, or other tools that can pipe PHP code.
+The command can read from standard input and output to standard output by passing ``-`` as the path argument. This is useful for integrating with editors, IDEs, or other tools that can pipe PHP code.
 
-**Important**: When using STDIN mode, the tool automatically runs in **dry-run mode** (read-only) since it cannot write back to STDIN. The fixed code is not automatically applied anywhere - you'll need to redirect the output if you want to capture it.
-
+**Important**: When using STDIN mode, the tool automatically runs in **dry-run mode** (read-only) since it cannot write back to STDIN unless running with ``PHP_CS_FIXER_FUTURE_MODE=1``.
 Basic usage:
 
 .. code-block:: console
@@ -144,15 +144,29 @@ How it works:
 * Content is read once from ``php://stdin`` and cached internally (since STDIN is not seekable)
 * The file is treated as ``stdin.php`` with extension ``.php`` so all fixers work normally
 * Dry-run mode is automatically enabled - no files are modified
-* Use ``--diff`` to see what changes would be applied
-* The output shows ``php://stdin`` as the filename in diffs
 
-Example with rules:
+Output formats with STDIN:
+
+* Use ``--diff`` to see a diff of what changes would be applied
+* Use ``--format=stdout`` to output the fixed file content directly to stdout (useful for piping or redirecting)
+* With ``PHP_CS_FIXER_FUTURE_MODE=1``, the ``stdout`` format is automatically selected
+
+Examples:
 
 .. code-block:: console
 
+    # View diff of changes
+    php php-cs-fixer.phar fix --diff - < file.php
     cat foo.php | php php-cs-fixer.phar fix --diff -
-    php php-cs-fixer.phar fix --rules=@PSR12 --diff - < foo.php
+    
+    # Output fixed content to stdout
+    cat foo.php | php php-cs-fixer.phar fix --format=stdout - > fixed.php
+    echo '<?php echo "test" ;' | php php-cs-fixer.phar fix --format=stdout --rules=@PSR12 -
+    
+    # Automatic stdout format with future mode
+    cat foo.php | PHP_CS_FIXER_FUTURE_MODE=1 php php-cs-fixer.phar fix - > fixed.php
+
+**Note**: The ``stdout`` format can only be used when reading from stdin. Attempting to use it with regular file paths will result in an error.
 
 Finally, if you don't need BC kept on CLI level, you might use ``PHP_CS_FIXER_FUTURE_MODE`` to start using options that
 would be default in next MAJOR release and to forbid using deprecated configuration:
