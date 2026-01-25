@@ -37,7 +37,6 @@ Example #1
             static::asertSame(bar());
         }
     }
-   \ No newline at end of file
 
 Example #2
 ~~~~~~~~~~

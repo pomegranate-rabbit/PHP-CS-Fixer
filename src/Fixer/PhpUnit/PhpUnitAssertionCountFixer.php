@@ -27,8 +27,9 @@ use PhpCsFixer\Tokenizer\Tokens;
  */
 final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
 {
-    private const START_TOKENS = [\T_WHILE, \T_IF, \T_FOR, \T_FOREACH];
-    private const END_TOKENS = [\T_ENDWHILE, \T_ENDIF, \T_ENDFOR, \T_ENDFOREACH];
+    private const START_TOKENS = [[\T_WHILE, 'while'], [\T_IF, 'if'], [\T_FOR, 'for'], [\T_FOREACH, 'foreach']];
+    private const START_TOKEN_IDS = [\T_WHILE, \T_IF, \T_FOR, \T_FOREACH];
+    private const END_TOKENS = [\T_WHILE => \T_ENDWHILE, \T_IF => \T_ENDIF, \T_FOR => \T_ENDFOR, \T_FOREACH => \T_ENDFOREACH];
 
     public function isRisky(): bool
     {
@@ -38,7 +39,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Use PHPUnit assertion `expectNotToPerformAssertion` instead of `addToAssertionCount(1)` when applicable.',
+            'Use PHPUnit assertion `expectNotToPerformAssertion` instead of `addToAssertionCount(1)` when only one assertion would be performed.',
             [
                 new CodeSample(
                     <<<'PHP'
@@ -55,6 +56,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
                                 static::asertSame(bar());
                             }
                         }
+
                         PHP,
                 ),
                 new CodeSample(
@@ -72,6 +74,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
                                 static::asertSame(bar());
                             }
                         }
+
                         PHP,
                 ),
             ],
@@ -83,31 +86,34 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
         $argumentsAnalyzer = new ArgumentsAnalyzer();
 
         for ($index = $startIndex; $index < $endIndex; ++$index) {
-            $startToken = array_search($tokens[$index]->getId(), self::START_TOKENS, true);
-            if ($startToken) {
-                $index = $this->getEndOfBlock($tokens, $index, $endIndex, self::END_TOKENS[$startToken]);
+            $startTokenIndex = $tokens->getNextTokenOfKind($index, self::START_TOKENS);
+            # Don't need to recalculate $nextSequence if the previous loop skipped a block
+            $nextSequence = $nextSequence ?? $tokens->findSequence([[\T_VARIABLE, '$this'], [\T_OBJECT_OPERATOR, '->'], [\T_STRING, 'addToAssertionCount']], $index);
+            if ($nextSequence === null) {
+                break;
             }
-
-            if (!$tokens[$index]->isObjectOperator()) {
+            $firstSequenceToken = array_keys($nextSequence)[0];
+            if ($startTokenIndex && $startTokenIndex < $firstSequenceToken) {
+                $startTokenId = $tokens[$startTokenIndex]->getId();
+                # Skips for, if, and while loops
+                $index = $this->getEndOfBlock($tokens, $startTokenIndex, $endIndex, self::END_TOKENS[$startTokenId]);
                 continue;
             }
+            $openingParenthesis = $tokens->getNextMeaningfulToken($firstSequenceToken+2);
+            $closingParenthesis = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openingParenthesis);
 
-            $previous = $tokens->getPrevMeaningfulToken($index);
-            $index = $tokens->getNextMeaningfulToken($index);
+            $index = $closingParenthesis;
+            $nextSequence = null;
 
-            if ($tokens[$index]->equals([\T_STRING, 'addToAssertionCount'], false) && $tokens[$previous]->equals([\T_VARIABLE, '$this'], false)) {
-                $openingParenthesis = $tokens->getNextMeaningfulToken($index);
-                $closingParenthesis = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openingParenthesis);
-                $arguments = $argumentsAnalyzer->getArguments($tokens, $openingParenthesis, $closingParenthesis);
-                if (1 !== \count($arguments)) {
-                    continue;
-                }
-                $argumentTokenIndex = array_pop($arguments);
-                $argumentToken = $tokens[$argumentTokenIndex];
-                if ($argumentToken->equals([\T_LNUMBER, '1'], false)) {
-                    $tokens[$index] = new Token([\T_STRING, 'expectNotToPerformAssertions']);
-                    $tokens->clearAt($argumentTokenIndex);
-                }
+            $arguments = $argumentsAnalyzer->getArguments($tokens, $openingParenthesis, $closingParenthesis);
+            if (1 !== \count($arguments)) {
+                continue;
+            }
+            $argumentTokenIndex = array_pop($arguments);
+            $argumentToken = $tokens[$argumentTokenIndex];
+            if ($argumentToken->equals([\T_LNUMBER, '1'], false)) {
+                $tokens[$firstSequenceToken+2] = new Token([\T_STRING, 'expectNotToPerformAssertions']);
+                $tokens->clearAt($argumentTokenIndex);
             }
         }
     }
@@ -119,9 +125,10 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
             if (null === $index) {
                 return \count($tokens);
             }
-            $startToken = array_search($tokens[$index]->getId(), self::START_TOKENS, true);
+            $startToken = array_search($tokens[$index]->getId(), self::START_TOKEN_IDS, true);
             if ($startToken) {
-                $this->getEndOfBlock($tokens, $index, $endIndex, self::END_TOKENS[$startToken]);
+                $startTokenId = self::START_TOKEN_IDS[$startToken];
+                $this->getEndOfBlock($tokens, $index, $endIndex, self::END_TOKENS[$startTokenId]);
             } elseif ($tokens[$index]->getId() === $endToken) {
                 return $index;
             } elseif (\T_RETURN === $tokens[$index]->getId()) {
