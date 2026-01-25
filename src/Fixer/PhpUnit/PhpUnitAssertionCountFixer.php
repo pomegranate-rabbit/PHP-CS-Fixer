@@ -53,7 +53,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
                                     return;
                                 }
 
-                                static::asertSame(bar());
+                                static::assertSame(bar());
                             }
                         }
 
@@ -71,7 +71,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
                                     return;
                                 }
 
-                                static::asertSame(bar());
+                                static::assertSame(bar());
                             }
                         }
 
