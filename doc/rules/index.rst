@@ -666,7 +666,7 @@ PHPUnit
   Rename deprecated PHPUnit assertions like ``assertFileNotExists`` to new methods like ``assertFileDoesNotExist``.
 - `php_unit_assertion_count <./php_unit/php_unit_assertion_count.rst>`_ *(risky)*
 
-  Use PHPUnit assertion ``expectNotToPerformAssertion`` instead of ``addToAssertionCount(1)`` when applicable.
+  Use PHPUnit assertion ``expectNotToPerformAssertion`` instead of ``addToAssertionCount(1)`` when only one assertion would be performed.
 - `php_unit_attributes <./php_unit/php_unit_attributes.rst>`_ *(configurable)*
 
   PHPUnit attributes must be used over their respective PHPDoc-based annotations.

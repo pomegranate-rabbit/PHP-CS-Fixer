@@ -18,7 +18,6 @@ use PhpCsFixer\Fixer\AbstractPhpUnitFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
-use PhpCsFixer\Tokenizer\Analyzer\ArgumentsAnalyzer;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
@@ -39,7 +38,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Use PHPUnit assertion `expectNotToPerformAssertion` instead of `addToAssertionCount(1)` when only one assertion would be performed.',
+            'Use PHPUnit assertion `expectNotToPerformAssertion` instead of `addToAssertionCount(1)` when only one assertion would be claimed.',
             [
                 new CodeSample(
                     <<<'PHP'
@@ -59,62 +58,44 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
 
                         PHP,
                 ),
-                new CodeSample(
-                    <<<'PHP'
-                        <?php
-                        final class MyTest extends \PHPUnit_Framework_TestCase
-                        {
-                            public function testFix(): void
-                            {
-                                if (foo()) {
-                                    $this->expectNotToPerformAssertions();
-                                    return;
-                                }
-
-                                static::assertSame(bar());
-                            }
-                        }
-
-                        PHP,
-                ),
             ],
+            'This rule will replace assertions outside of control flows like if, while, and for.',
+            'Conversion may be done in situations where it should not happen.',
         );
     }
 
     protected function applyPhpUnitClassFix(Tokens $tokens, int $startIndex, int $endIndex): void
     {
-        $argumentsAnalyzer = new ArgumentsAnalyzer();
-
         for ($index = $startIndex; $index < $endIndex; ++$index) {
             $startTokenIndex = $tokens->getNextTokenOfKind($index, self::START_TOKENS);
-            # Don't need to recalculate $nextSequence if the previous loop skipped a block
-            $nextSequence = $nextSequence ?? $tokens->findSequence([[\T_VARIABLE, '$this'], [\T_OBJECT_OPERATOR, '->'], [\T_STRING, 'addToAssertionCount']], $index);
-            if ($nextSequence === null) {
+            // Don't need to recalculate $nextSequence if the previous loop skipped a block
+            $nextSequence ??= $tokens->findSequence([[\T_STRING, 'addToAssertionCount'], '(', [\T_LNUMBER, '1'], ')'], $index);
+            if (null === $nextSequence) {
                 break;
             }
             $firstSequenceToken = array_keys($nextSequence)[0];
             if ($startTokenIndex && $startTokenIndex < $firstSequenceToken) {
                 $startTokenId = $tokens[$startTokenIndex]->getId();
-                # Skips for, if, and while loops
+                // Skips for, if, and while loops
                 $index = $this->getEndOfBlock($tokens, $startTokenIndex, $endIndex, self::END_TOKENS[$startTokenId]);
+
                 continue;
             }
-            $openingParenthesis = $tokens->getNextMeaningfulToken($firstSequenceToken+2);
-            $closingParenthesis = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openingParenthesis);
-
-            $index = $closingParenthesis;
+            // Verify previous tokens to be valid
+            $valid = false;
+            if (\T_OBJECT_OPERATOR === $tokens[$firstSequenceToken - 1]->getId()) {
+                $valid = '$this' === $tokens[$firstSequenceToken - 2]->getContent();
+            } elseif (\T_PAAMAYIM_NEKUDOTAYIM === $tokens[$firstSequenceToken - 1]->getId()) {
+                $valid = \in_array($tokens[$firstSequenceToken - 2]->getContent(), ['self', 'static'], true);
+            }
+            if (!$valid) {
+                continue;
+            }
+            $index = $firstSequenceToken + 3;
+            $argumentTokenIndex = $firstSequenceToken + 2;
+            $tokens[$firstSequenceToken] = new Token([\T_STRING, 'expectNotToPerformAssertions']);
+            $tokens->clearAt($argumentTokenIndex);
             $nextSequence = null;
-
-            $arguments = $argumentsAnalyzer->getArguments($tokens, $openingParenthesis, $closingParenthesis);
-            if (1 !== \count($arguments)) {
-                continue;
-            }
-            $argumentTokenIndex = array_pop($arguments);
-            $argumentToken = $tokens[$argumentTokenIndex];
-            if ($argumentToken->equals([\T_LNUMBER, '1'], false)) {
-                $tokens[$firstSequenceToken+2] = new Token([\T_STRING, 'expectNotToPerformAssertions']);
-                $tokens->clearAt($argumentTokenIndex);
-            }
         }
     }
 

@@ -133,6 +133,39 @@ final class MyTest extends \PHPUnit_Framework_TestCase
 }',
         ];
 
+        yield 'fix for static' => [
+            '<?php
+final class MyTest extends \PHPUnit_Framework_TestCase
+{
+    public function testFoo1(): void
+    {
+        // does fix when static
+        static::expectNotToPerformAssertions();
+    }
+
+    public function testFoo2(): void
+    {
+        // does fix when static
+        self::expectNotToPerformAssertions();
+    }
+}',
+            '<?php
+final class MyTest extends \PHPUnit_Framework_TestCase
+{
+    public function testFoo1(): void
+    {
+        // does fix when static
+        static::addToAssertionCount(1);
+    }
+
+    public function testFoo2(): void
+    {
+        // does fix when static
+        self::expectNotToPerformAssertions();
+    }
+}',
+        ];
+
         yield 'simple non fixes' => [
             '<?php
 final class MyTest extends \PHPUnit_Framework_TestCase
@@ -175,22 +208,10 @@ final class MyTest extends \PHPUnit_Framework_TestCase
         $foo->addToAssertionCount(1);
     }
 
-    public function testFoo7(): void
-    {
-        // does not fix when static
-        static::addToAssertionCount(1);
-    }
-
     public function testFoo8(): void
     {
         // does not fix when static
         Foo::addToAssertionCount(1);
-    }
-
-    public function testFoo9(): void
-    {
-        // does not fix when static
-        self::addToAssertionCount(1);
     }
 
     public function testFoo10(): void

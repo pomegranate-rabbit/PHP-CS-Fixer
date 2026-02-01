@@ -3,7 +3,7 @@ Rule ``php_unit_assertion_count``
 =================================
 
 Use PHPUnit assertion ``expectNotToPerformAssertion`` instead of
-``addToAssertionCount(1)`` when applicable.
+``addToAssertionCount(1)`` when only one assertion would be performed.
 
 Warning
 -------
@@ -34,16 +34,9 @@ Example #1
                 return;
             }
 
-            static::asertSame(bar());
+            static::assertSame(bar());
         }
     }
-
-Example #2
-~~~~~~~~~~
-
-.. code-block:: diff
-
-   
 
 References
 ----------
