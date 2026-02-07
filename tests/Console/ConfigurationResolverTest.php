@@ -304,13 +304,36 @@ final class ConfigurationResolverTest extends TestCase
     public function testResolveConfigFileChooseFileWithInvalidFormat(): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessageMatches('/^The format "xls" is not defined, supported are "checkstyle", "gitlab", "json", "junit", "txt" and "xml"\.$/');
+        $this->expectExceptionMessageMatches('/^The format "xls" is not defined, supported are "checkstyle", "gitlab", "json", "junit", "stdout", "txt" and "xml"\.$/');
 
         $dirBase = self::getFixtureDir();
 
         $resolver = $this->createConfigurationResolver(['path' => [$dirBase.'case_7']]);
 
         $resolver->getReporter();
+    }
+
+    public function testResolveFormatStdoutWithoutStdin(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The "stdout" format is only available when reading from standard input (use "-" as path argument).');
+
+        $resolver = $this->createConfigurationResolver([
+            'format' => 'stdout',
+            'path' => [__DIR__],
+        ]);
+
+        $resolver->getReporter();
+    }
+
+    public function testResolveFormatStdoutWithStdin(): void
+    {
+        $resolver = $this->createConfigurationResolver([
+            'format' => 'stdout',
+            'path' => ['-'],
+        ]);
+
+        self::assertSame('stdout', $resolver->getReporter()->getFormat());
     }
 
     public function testResolveConfigFileChooseFileWithPathArrayWithoutConfig(): void

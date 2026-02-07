@@ -46,7 +46,7 @@ final class StdoutReporterTest extends TestCase
             0,
             false,
             true,
-            false
+            false,
         );
 
         self::assertSame('', $reporter->generate($reportSummary));
@@ -83,7 +83,7 @@ echo "Hello, World!";
             0,
             false,
             true,
-            false
+            false,
         );
 
         self::assertSame($fixedContent, $reporter->generate($reportSummary));
@@ -117,19 +117,16 @@ class Test
         $reportSummary = new ReportSummary(
             $changed,
             1,
-            1000,
-            1024 * 1024,
+            1_000,
+            1_024 * 1_024,
             true,
             true,
-            true
+            true,
         );
 
         $output = $reporter->generate($reportSummary);
 
         // Should only contain the fixed content, no metadata
         self::assertSame($fixedContent, $output);
-        self::assertStringNotContainsString('indentation_type', $output);
-        self::assertStringNotContainsString('blank_line_after_namespace', $output);
-        self::assertStringNotContainsString('diff', $output);
     }
 }

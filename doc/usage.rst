@@ -149,7 +149,7 @@ Output formats with STDIN:
 
 * Use ``--diff`` to see a diff of what changes would be applied
 * Use ``--format=stdout`` to output the fixed file content directly to stdout (useful for piping or redirecting)
-* With ``PHP_CS_FIXER_FUTURE_MODE=1``, the ``stdout`` format is automatically selected
+* With ``PHP_CS_FIXER_FUTURE_MODE=1``, the ``stdout`` format is automatically selected during stdin input.
 
 Examples:
 

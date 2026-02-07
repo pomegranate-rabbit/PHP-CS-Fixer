@@ -89,6 +89,7 @@ final class WorkerCommand extends Command
                 new InputOption('cache-file', '', InputOption::VALUE_REQUIRED, 'The path to the cache file.'),
                 new InputOption('diff', '', InputOption::VALUE_NONE, 'Prints diff for each file.'),
                 new InputOption('stop-on-violation', '', InputOption::VALUE_NONE, 'Stop execution on first violation.'),
+                new InputOption('return-complete-content', '', InputOption::VALUE_NONE, 'Return complete fixed file content in results.'),
             ],
         );
     }
@@ -242,6 +243,7 @@ final class WorkerCommand extends Command
             null,
             $this->configurationResolver->getConfigFile(),
             $this->configurationResolver->getRuleCustomisationPolicy(),
+            $input->getOption('return-complete-content'),
         );
     }
 }

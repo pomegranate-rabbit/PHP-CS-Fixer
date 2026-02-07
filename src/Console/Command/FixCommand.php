@@ -291,10 +291,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
             ? $output->getErrorOutput()
             : ('txt' === $reporter->getFormat() ? $output : null);
 
-        if ('stdout' === $reporter->getFormat()) {
-            $stdErr = null;
-        }
-
         if (null !== $stdErr) {
             $stdErr->writeln(Application::getAboutWithRuntime(true));
 
@@ -435,6 +431,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
             $input,
             $resolver->getConfigFile(),
             $resolver->getRuleCustomisationPolicy(),
+            'stdout' === $reporter->getFormat(),
         );
 
         $this->eventDispatcher->addListener(FileProcessed::NAME, [$progressOutput, 'onFixerFileProcessed']);

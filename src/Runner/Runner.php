@@ -55,7 +55,7 @@ use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
- * @phpstan-type _RunResult array<string, array{appliedFixers: list<string>, diff: string, fixedContent: string}>
+ * @phpstan-type _RunResult array<string, array{appliedFixers: list<string>, diff: string, fixedContent?: string}>
  *
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
  * @author Greg Korba <greg@codito.dev>
@@ -88,6 +88,8 @@ final class Runner
     private bool $isDryRun;
 
     private LinterInterface $linter;
+
+    private bool $returnCompleteContent;
 
     /**
      * @var null|\Traversable<array-key, \SplFileInfo>
@@ -135,7 +137,8 @@ final class Runner
         ?ParallelConfig $parallelConfig = null,
         ?InputInterface $input = null,
         ?string $configFile = null,
-        ?RuleCustomisationPolicyInterface $ruleCustomisationPolicy = null
+        ?RuleCustomisationPolicyInterface $ruleCustomisationPolicy = null,
+        bool $returnCompleteContent = false
     ) {
         // Required only for main process (calculating workers count)
         $this->fileCount = null !== $fileIterator ? \count(iterator_to_array($fileIterator)) : 0;
@@ -163,6 +166,7 @@ final class Runner
         $this->input = $input;
         $this->configFile = $configFile;
         $this->ruleCustomisationPolicy = $ruleCustomisationPolicy ?? new NullRuleCustomisationPolicy();
+        $this->returnCompleteContent = $returnCompleteContent;
     }
 
     /**
@@ -363,6 +367,7 @@ final class Runner
                     $this->stopOnViolation,
                     $this->parallelConfig,
                     $this->configFile,
+                    $this->returnCompleteContent,
                 ),
                 $identifier,
                 $serverPort,
@@ -495,7 +500,7 @@ final class Runner
     }
 
     /**
-     * @return null|array{appliedFixers: list<string>, diff: string, fixedContent: string}
+     * @return null|array{appliedFixers: list<string>, diff: string, fixedContent?: string}
      */
     private function fixFile(\SplFileInfo $file, LintingResultInterface $lintingResult): ?array
     {
@@ -632,8 +637,11 @@ final class Runner
             $fixInfo = [
                 'appliedFixers' => $appliedFixers,
                 'diff' => $this->differ->diff($old, $new, $file),
-                'fixedContent' => $new,
             ];
+
+            if ($this->returnCompleteContent) {
+                $fixInfo['fixedContent'] = $new;
+            }
 
             try {
                 $this->linter->lintSource($new)->check();

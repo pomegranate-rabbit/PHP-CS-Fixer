@@ -26,7 +26,7 @@ namespace PhpCsFixer\Console\Report\FixReport;
 final class ReportSummary
 {
     /**
-     * @var array<string, array{appliedFixers: list<string>, diff: string, fixedContent: string}>
+     * @var array<string, array{appliedFixers: list<string>, diff: string, fixedContent?: string}>
      */
     private array $changed;
 
@@ -43,7 +43,7 @@ final class ReportSummary
     private bool $isDecoratedOutput;
 
     /**
-     * @param array<string, array{appliedFixers: list<string>, diff: string, fixedContent: string}> $changed
+     * @param array<string, array{appliedFixers: list<string>, diff: string, fixedContent?: string}> $changed
      * @param int                                                                                    $time    duration in milliseconds
      * @param int                                                                                    $memory  memory usage in bytes
      */
@@ -76,7 +76,7 @@ final class ReportSummary
     }
 
     /**
-     * @return array<string, array{appliedFixers: list<string>, diff: string, fixedContent: string}>
+     * @return array<string, array{appliedFixers: list<string>, diff: string, fixedContent?: string}>
      */
     public function getChanged(): array
     {

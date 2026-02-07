@@ -73,6 +73,22 @@ final class StdinTest extends AbstractSmokeTestCase
         );
     }
 
+    public function testFixingStdinWithStdoutFormat(): void
+    {
+        $cwd = __DIR__.'/../..';
+
+        $command = 'php php-cs-fixer fix --sequential --rules=@PSR2 --format=stdout --using-cache=no --config=- --no-interaction';
+        $inputFile = 'tests/Fixtures/Integration/set/@PSR2.test-in.php';
+
+        $stdinResult = CommandExecutor::create("{$command} - < {$inputFile}", $cwd)->getResult(false);
+
+        // Exit code 8 means files need fixing (stdin always runs in dry-run mode)
+        self::assertSame(8, $stdinResult->getCode());
+        self::assertStringContainsString('<?php', $stdinResult->getOutput());
+        self::assertStringNotContainsString('Fixed', $stdinResult->getOutput());
+        self::assertStringNotContainsString('php://stdin', $stdinResult->getOutput());
+    }
+
     private function unifyFooter(string $output): string
     {
         return Preg::replace(

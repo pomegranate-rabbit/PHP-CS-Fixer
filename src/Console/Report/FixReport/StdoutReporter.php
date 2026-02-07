@@ -25,24 +25,26 @@ namespace PhpCsFixer\Console\Report\FixReport;
  */
 final class StdoutReporter implements ReporterInterface
 {
-  public function getFormat(): string
-  {
-    return 'stdout';
-  }
-
-  public function generate(ReportSummary $reportSummary): string
-  {
-    $changed = $reportSummary->getChanged();
-
-    // For stdout format, we expect exactly one file (stdin input)
-    if (0 === \count($changed)) {
-      // No changes, return empty string
-      return '';
+    public function getFormat(): string
+    {
+        return 'stdout';
     }
 
-    // Get the first (and should be only) file's fixed content
-    $fixResult = reset($changed);
+    public function generate(ReportSummary $reportSummary): string
+    {
+        $changed = $reportSummary->getChanged();
 
-    return $fixResult['fixedContent'];
-  }
+        if (1 !== \count($changed)) {
+            throw new \RuntimeException('Expected exactly one file in changed array for stdout format, got '.\count($changed));
+        }
+
+        // Get the first (and should be only) file's fixed content
+        $fixResult = reset($changed);
+
+        if (!isset($fixResult['fixedContent'])) {
+            throw new \RuntimeException('Missing fixedContent in fix result for stdout format');
+        }
+
+        return $fixResult['fixedContent'];
+    }
 }
