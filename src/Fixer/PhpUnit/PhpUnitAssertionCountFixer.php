@@ -73,6 +73,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
             if (null === $nextSequence) {
                 break;
             }
+
             $firstSequenceToken = array_keys($nextSequence)[0];
             if ($startTokenIndex && $startTokenIndex < $firstSequenceToken) {
                 $startTokenId = $tokens[$startTokenIndex]->getId();
@@ -81,6 +82,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
 
                 continue;
             }
+
             // Verify previous tokens to be valid
             $valid = false;
             if (\T_OBJECT_OPERATOR === $tokens[$firstSequenceToken - 1]->getId()) {
@@ -91,6 +93,7 @@ final class PhpUnitAssertionCountFixer extends AbstractPhpUnitFixer
             if (!$valid) {
                 continue;
             }
+
             $index = $firstSequenceToken + 3;
             $argumentTokenIndex = $firstSequenceToken + 2;
             $tokens[$firstSequenceToken] = new Token([\T_STRING, 'expectNotToPerformAssertions']);
