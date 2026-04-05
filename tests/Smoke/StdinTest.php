@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace PhpCsFixer\Tests\Smoke;
 
 use Keradus\CliExecutor\CommandExecutor;
+use PhpCsFixer\Console\Command\FixCommandExitStatusCalculator;
 use PhpCsFixer\Preg;
 
 /**
@@ -77,13 +78,13 @@ final class StdinTest extends AbstractSmokeTestCase
     {
         $cwd = __DIR__.'/../..';
 
-        $command = 'php php-cs-fixer fix --sequential --rules=@PSR2 --format=stdout --using-cache=no --config=- --no-interaction';
+        $command = 'php php-cs-fixer fix --rules=@PSR2 --format=stdout --config=- --no-interaction';
         $inputFile = 'tests/Fixtures/Integration/set/@PSR2.test-in.php';
 
         $stdinResult = CommandExecutor::create("{$command} - < {$inputFile}", $cwd)->getResult(false);
 
         // Exit code 8 means files need fixing (stdin always runs in dry-run mode)
-        self::assertSame(8, $stdinResult->getCode());
+        self::assertSame(FixCommandExitStatusCalculator::EXIT_STATUS_FLAG_HAS_CHANGED_FILES, $stdinResult->getCode());
         self::assertStringContainsString('<?php', $stdinResult->getOutput());
         self::assertStringNotContainsString('Fixed', $stdinResult->getOutput());
         self::assertStringNotContainsString('php://stdin', $stdinResult->getOutput());

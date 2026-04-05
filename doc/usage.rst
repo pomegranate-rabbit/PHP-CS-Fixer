@@ -131,7 +131,7 @@ Reading from STDIN
 
 The command can read from standard input and output to standard output by passing ``-`` as the path argument. This is useful for integrating with editors, IDEs, or other tools that can pipe PHP code.
 
-**Important**: When using STDIN mode, the tool automatically runs in **dry-run mode** (read-only) since it cannot write back to STDIN unless running with ``PHP_CS_FIXER_FUTURE_MODE=1``.
+**Important**: When using STDIN mode, the tool automatically runs in **dry-run mode** (read-only) since it cannot write back to STDIN.
 Basic usage:
 
 .. code-block:: console

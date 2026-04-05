@@ -137,6 +137,7 @@ final class Runner
         ?ParallelConfig $parallelConfig = null,
         ?InputInterface $input = null,
         ?string $configFile = null,
+        // @TODO 3.99 remove parameter, replace with StdMemoryFile
         ?RuleCustomisationPolicyInterface $ruleCustomisationPolicy = null,
         bool $returnCompleteContent = false
     ) {
@@ -181,6 +182,11 @@ final class Runner
 
         // Required only for main process (calculating workers count)
         $this->fileCount = \count(iterator_to_array($fileIterator));
+    }
+
+    public function setReturnCompleteContent(bool $returnCompleteContent): void
+    {
+        $this->returnCompleteContent = $returnCompleteContent;
     }
 
     /**
@@ -307,8 +313,10 @@ final class Runner
             return $files;
         };
 
+        $returnCompleteContent = $this->returnCompleteContent;
+
         // [REACT] Handle worker's handshake (init connection)
-        $server->on('connection', static function (ConnectionInterface $connection) use ($processPool, $getFileChunk): void {
+        $server->on('connection', static function (ConnectionInterface $connection) use ($processPool, $getFileChunk, $returnCompleteContent): void {
             $decoder = new Decoder(
                 $connection,
                 true,
@@ -319,7 +327,7 @@ final class Runner
             $encoder = new Encoder($connection, \JSON_INVALID_UTF8_IGNORE);
 
             // [REACT] Bind connection when worker's process requests "hello" action (enables 2-way communication)
-            $decoder->on('data', static function (array $data) use ($processPool, $getFileChunk, $decoder, $encoder): void {
+            $decoder->on('data', static function (array $data) use ($processPool, $getFileChunk, $decoder, $encoder, $returnCompleteContent): void {
                 if (ParallelAction::WORKER_HELLO !== $data['action']) {
                     return;
                 }
@@ -344,7 +352,7 @@ final class Runner
                     return;
                 }
 
-                $process->request(['action' => ParallelAction::RUNNER_REQUEST_ANALYSIS, 'files' => $fileChunk]);
+                $process->request(['action' => ParallelAction::RUNNER_REQUEST_ANALYSIS, 'files' => $fileChunk, 'returnCompleteContent' => $returnCompleteContent]);
             });
         });
 
@@ -367,7 +375,6 @@ final class Runner
                     $this->stopOnViolation,
                     $this->parallelConfig,
                     $this->configFile,
-                    $this->returnCompleteContent,
                 ),
                 $identifier,
                 $serverPort,
@@ -423,7 +430,7 @@ final class Runner
                             return;
                         }
 
-                        $process->request(['action' => ParallelAction::RUNNER_REQUEST_ANALYSIS, 'files' => $fileChunk]);
+                        $process->request(['action' => ParallelAction::RUNNER_REQUEST_ANALYSIS, 'files' => $fileChunk, 'returnCompleteContent' => $this->returnCompleteContent]);
 
                         return;
                     }

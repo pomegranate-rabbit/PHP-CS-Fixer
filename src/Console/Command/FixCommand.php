@@ -286,7 +286,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
         $reporter = $resolver->getReporter();
 
-        // Suppress stderr output for stdout format to keep output clean
         $stdErr = $output instanceof ConsoleOutputInterface
             ? $output->getErrorOutput()
             : ('txt' === $reporter->getFormat() ? $output : null);

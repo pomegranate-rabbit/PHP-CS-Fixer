@@ -694,11 +694,10 @@ final class ConfigurationResolver
                 if (filter_var(getenv('GITLAB_CI'), \FILTER_VALIDATE_BOOL)) {
                     $this->format = 'gitlab';
                 }
-            }
 
-            // Auto-select stdout format for stdin input when in future mode
-            if (Future::isFutureModeEnabled() && $this->isStdIn() && null === $this->options['format']) {
-                $this->format = 'stdout';
+                if (Future::isFutureModeEnabled() && $this->isStdIn()) {
+                    $this->format = 'stdout';
+                }
             }
 
             // Validate that stdout format is only used with stdin

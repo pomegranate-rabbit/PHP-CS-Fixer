@@ -31,20 +31,17 @@ final class RunnerConfig
     private bool $stopOnViolation;
     private ParallelConfig $parallelConfig;
     private ?string $configFile;
-    private bool $returnCompleteContent;
 
     public function __construct(
         bool $isDryRun,
         bool $stopOnViolation,
         ParallelConfig $parallelConfig,
-        ?string $configFile = null,
-        bool $returnCompleteContent = false
+        ?string $configFile = null
     ) {
         $this->isDryRun = $isDryRun;
         $this->stopOnViolation = $stopOnViolation;
         $this->parallelConfig = $parallelConfig;
         $this->configFile = $configFile;
-        $this->returnCompleteContent = $returnCompleteContent;
     }
 
     public function isDryRun(): bool
@@ -67,8 +64,4 @@ final class RunnerConfig
         return $this->configFile;
     }
 
-    public function shouldReturnCompleteContent(): bool
-    {
-        return $this->returnCompleteContent;
-    }
 }

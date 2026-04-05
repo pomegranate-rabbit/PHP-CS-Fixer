@@ -35,11 +35,16 @@ final class StdoutReporter implements ReporterInterface
         $changed = $reportSummary->getChanged();
 
         if (1 !== \count($changed)) {
-            throw new \RuntimeException('Expected exactly one file in changed array for stdout format, got '.\count($changed));
+            throw new \RuntimeException(\sprintf(
+                'Expected exactly one file in changed array for stdout format, got %d',
+                \count($changed)
+            ));
         }
 
-        // Get the first (and should be only) file's fixed content
-        $fixResult = reset($changed);
+        if (!isset($changed["php://stdin"])) {
+            throw new \RuntimeException('Missing fix result for php://stdin for stdout format');
+        }
+        $fixResult = $changed["php://stdin"];
 
         if (!isset($fixResult['fixedContent'])) {
             throw new \RuntimeException('Missing fixedContent in fix result for stdout format');
