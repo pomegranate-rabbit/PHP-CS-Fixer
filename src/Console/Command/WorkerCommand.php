@@ -138,10 +138,14 @@ final class WorkerCommand extends Command
 
                     // [REACT] Listen for messages from the parallelisation operator (analysis requests)
                     $in->on('data', function (array $json) use ($loop, $runner, $out): void {
-                        $action = $json['action'] ?? null;
+                        \assert(isset($json['action']));
+
+                        $action = $json['action'];
 
                         // Parallelisation operator does not have more to do, let's close the connection
                         if (ParallelAction::RUNNER_THANK_YOU === $action) {
+                            // no payload to assert on
+
                             $loop->stop();
 
                             return;
@@ -153,6 +157,10 @@ final class WorkerCommand extends Command
                         }
 
                         $runner->setReturnCompleteContent($json['returnCompleteContent'] ?? false);
+
+                        \assert(isset(
+                            $json['files'],
+                        ));
 
                         /** @var iterable<int, string> $files */
                         $files = $json['files'];
@@ -173,11 +181,12 @@ final class WorkerCommand extends Command
 
                             $out->write([
                                 'action' => ParallelAction::WORKER_RESULT,
+                                'errors' => $this->errorsManager->forPath($path),
                                 'file' => $path,
                                 'fileHash' => $this->events[0]->getFileHash(),
-                                'status' => $this->events[0]->getStatus(),
                                 'fixInfo' => array_pop($analysisResult),
-                                'errors' => $this->errorsManager->forPath($path),
+                                'memoryUsage' => memory_get_peak_usage(true),
+                                'status' => $this->events[0]->getStatus(),
                             ]);
                         }
 
