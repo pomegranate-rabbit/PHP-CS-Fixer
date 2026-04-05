@@ -37,14 +37,14 @@ final class StdoutReporter implements ReporterInterface
         if (1 !== \count($changed)) {
             throw new \RuntimeException(\sprintf(
                 'Expected exactly one file in changed array for stdout format, got %d',
-                \count($changed)
+                \count($changed),
             ));
         }
 
-        if (!isset($changed["php://stdin"])) {
+        if (!isset($changed['php://stdin'])) {
             throw new \RuntimeException('Missing fix result for php://stdin for stdout format');
         }
-        $fixResult = $changed["php://stdin"];
+        $fixResult = $changed['php://stdin'];
 
         if (!isset($fixResult['fixedContent'])) {
             throw new \RuntimeException('Missing fixedContent in fix result for stdout format');

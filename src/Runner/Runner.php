@@ -199,7 +199,8 @@ final class Runner
 
     /**
      * @internal
-     * @TODO 3.99 remove when replacing with StdMemoryFile 
+     *
+     * @TODO 3.99 remove when replacing with StdMemoryFile
      */
     public function setReturnCompleteContent(bool $returnCompleteContent): void
     {
@@ -346,7 +347,6 @@ final class Runner
             // [REACT] Bind connection when worker's process requests "hello" action (enables 2-way communication)
             $decoder->on('data', static function (array $data) use ($processPool, $getFileChunk, $decoder, $encoder, $returnCompleteContent): void {
                 \assert(isset($data['action']));
-
 
                 if (ParallelAction::WORKER_HELLO !== $data['action']) {
                     return;

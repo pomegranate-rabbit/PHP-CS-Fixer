@@ -63,5 +63,4 @@ final class RunnerConfig
     {
         return $this->configFile;
     }
-
 }
