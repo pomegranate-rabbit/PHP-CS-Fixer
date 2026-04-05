@@ -142,8 +142,8 @@ final class Runner
         ?ParallelConfig $parallelConfig = null,
         ?InputInterface $input = null,
         ?string $configFile = null,
-        // @TODO 3.99 remove parameter, replace with StdMemoryFile
         ?RuleCustomisationPolicyInterface $ruleCustomisationPolicy = null,
+        // @TODO 3.99 remove parameter, replace with StdMemoryFile
         bool $returnCompleteContent = false
     ) {
         // Required only for main process (calculating workers count)
@@ -197,6 +197,10 @@ final class Runner
         $this->fileCount = \count(iterator_to_array($fileIterator));
     }
 
+    /**
+     * @internal
+     * @TODO 3.99 remove when replacing with StdMemoryFile 
+     */
     public function setReturnCompleteContent(bool $returnCompleteContent): void
     {
         $this->returnCompleteContent = $returnCompleteContent;

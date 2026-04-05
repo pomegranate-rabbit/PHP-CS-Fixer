@@ -118,7 +118,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
             * `@auto` aims to auto-select best reporter for given CI or local execution (resolution into best format is outside of BC promise and is future-ready)
               * `gitlab` for GitLab
             * `@auto,{format}` takes `@auto` under CI, and {format} otherwise
-            * `stdout` outputs the fixed file content directly to stdout (only available with stdin input, automatically selected with `PHP_CS_FIXER_FUTURE_MODE=1`)
+            * `stdout` outputs the fixed file content directly to stdout (only available with stdin input, automatically selected with `@auto`)
 
             NOTE: the output for the following formats are generated in accordance with schemas
 
