@@ -83,7 +83,7 @@ final class StdinTest extends AbstractSmokeTestCase
 
         $stdinResult = CommandExecutor::create("{$command} - < {$inputFile}", $cwd)->getResult(false);
 
-        // Exit code 8 means files need fixing (stdin always runs in dry-run mode)
+        // Exit code `FixCommandExitStatusCalculator::EXIT_STATUS_FLAG_HAS_CHANGED_FILES` means files need fixing (stdin always runs in dry-run mode)
         self::assertSame(FixCommandExitStatusCalculator::EXIT_STATUS_FLAG_HAS_CHANGED_FILES, $stdinResult->getCode());
         self::assertStringContainsString('<?php', $stdinResult->getOutput());
         self::assertStringNotContainsString('Fixed', $stdinResult->getOutput());
